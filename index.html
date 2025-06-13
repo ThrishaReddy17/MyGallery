@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Enhanced Image Gallery</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="gallery-container">
+  <h1 class="gallery-title">Image Gallery</h1>
+  
+  <div class="gallery" id="gallery">
+    <div class="gallery-item">
+      <img src="pictures/flag.jpg" alt="Indian Flag">
+      <div class="image-caption">Indian Flag</div>
+    </div>
+    <div class="gallery-item">
+      <img src="pictures/sindoor.jpg" alt="Sindoor Moment">
+      <div class="image-caption">Sindoor Moment</div>
+    </div>
+    <div class="gallery-item">
+      <img src="pictures/img3.avif" alt="Nature Scene">
+      <div class="image-caption">Nature Scene</div>
+    </div>
+    <div class="gallery-item">
+      <img src="pictures/img4.jpg" alt="Scenic View">
+      <div class="image-caption">Scenic View</div>
+    </div>
+    <div class="gallery-item">
+      <img src="pictures/img5.jpg" alt="Sunset Beauty">
+      <div class="image-caption">Sunset Beauty</div>
+    </div>
+    <div class="gallery-item">
+      <img src="pictures/msd.jpg" alt="MS Dhoni">
+      <div class="image-caption">MS Dhoni</div>
+    </div>
+    <div class="gallery-item">
+      <img src="pictures/img12.jpg" alt="Garden Blossoms">
+      <div class="image-caption">Garden Blossoms</div>
+    </div>
+    <div class="gallery-item">
+      <img src="pictures/img7.jpg" alt="Old Memory">
+      <div class="image-caption">Old Memory</div>
+    </div>
+    <div class="gallery-item">
+      <img src="pictures/img10.jpg" alt="Beach Walk">
+      <div class="image-caption">Beach Walk</div>
+    </div>
+    <div class="gallery-item">
+      <img src="pictures/img11.jpg" alt="Temple View">
+      <div class="image-caption">Temple View</div>
+    </div>
+    <div class="gallery-item">
+      <img src="pictures/img8.jpg" alt="Festival Night">
+      <div class="image-caption">Festival Night</div>
+    </div>
+    <div class="gallery-item">
+      <img src="pictures/img16.jpg" alt="Mountain Range">
+      <div class="image-caption">Mountain Range</div>
+    </div>
+    <div class="gallery-item">
+      <img src="pictures/img15.jpg" alt="Village Scene">
+      <div class="image-caption">Village Scene</div>
+    </div>
+    <div class="gallery-item">
+      <img src="pictures/suriya.jpg" alt="Actor Suriya">
+      <div class="image-caption">Actor Suriya</div>
+    </div>
+    <div class="gallery-item">
+      <img src="pictures/img13.jpg" alt="School Function">
+      <div class="image-caption">School Function</div>
+    </div>
+    <div class="gallery-item">
+      <img src="pictures/phogat.jpg" alt="Wrestler Phogat">
+      <div class="image-caption">Wrestler Phogat</div>
+    </div>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox">
+  <div class="lightbox-content">
+    <button class="close-btn" onclick="closeLightbox()" aria-label="Close">&times;</button>
+    <div class="lightbox-nav">
+      <button class="nav-btn left-arrow" onclick="prevImage()" aria-label="Previous image">&lt;</button>
+      <button class="nav-btn right-arrow" onclick="nextImage()" aria-label="Next image">&gt;</button>
+    </div>
+    <img id="lightbox-img" src="" alt="Preview" loading="lazy">
+    <div class="caption" id="caption"></div>
+    <div class="swipe-indicator">Swipe to navigate</div>
+  </div>
+</div>
+
+<script>
+  const images = document.querySelectorAll(".gallery-item img");
+  const lightbox = document.getElementById("lightbox");
+  const lightboxImg = document.getElementById("lightbox-img");
+  const caption = document.getElementById("caption");
+  const swipeIndicator = document.querySelector(".swipe-indicator");
+
+  let currentIndex = 0;
+  let slideshowInterval;
+  let touchStartX = 0;
+  let touchEndX = 0;
+  let isSwiping = false;
+
+  // Add loading state to images
+  images.forEach(img => {
+    img.parentElement.classList.add('loading');
+    img.onload = () => {
+      img.parentElement.classList.remove('loading');
+    };
+  });
+
+  // Touch event handlers
+  function handleTouchStart(e) {
+    touchStartX = e.touches[0].clientX;
+    isSwiping = true;
+  }
+
+  function handleTouchMove(e) {
+    if (!isSwiping) return;
+    touchEndX = e.touches[0].clientX;
+    const diff = touchStartX - touchEndX;
+    
+    // Show swipe indicator on first touch
+    if (Math.abs(diff) > 10) {
+      swipeIndicator.style.display = 'block';
+      setTimeout(() => {
+        swipeIndicator.style.display = 'none';
+      }, 2000);
+    }
+  }
+
+  function handleTouchEnd() {
+    if (!isSwiping) return;
+    isSwiping = false;
+    
+    const diff = touchStartX - touchEndX;
+    const threshold = 50; // minimum swipe distance
+
+    if (Math.abs(diff) > threshold) {
+      if (diff > 0) {
+        nextImage(); // Swipe left
+      } else {
+        prevImage(); // Swipe right
+      }
+    }
+  }
+
+  // Add touch event listeners to lightbox
+  lightbox.addEventListener('touchstart', handleTouchStart, { passive: true });
+  lightbox.addEventListener('touchmove', handleTouchMove, { passive: true });
+  lightbox.addEventListener('touchend', handleTouchEnd);
+
+  function showLightbox(index) {
+    currentIndex = index;
+    updateLightbox();
+    lightbox.style.display = "flex";
+    setTimeout(() => lightbox.classList.add("show"), 10);
+    startSlideshow();
+    
+    // Reset touch state
+    isSwiping = false;
+    touchStartX = 0;
+    touchEndX = 0;
+  }
+
+  function updateLightbox() {
+    lightboxImg.style.opacity = 0;
+    lightboxImg.style.transform = "scale(0.9)";
+    setTimeout(() => {
+      lightboxImg.src = images[currentIndex].src;
+      caption.textContent = images[currentIndex].alt;
+      lightboxImg.onload = () => {
+        lightboxImg.style.opacity = 1;
+        lightboxImg.style.transform = "scale(1)";
+      };
+    }, 300);
+  }
+
+  function closeLightbox() {
+    lightbox.classList.remove("show");
+    setTimeout(() => {
+      lightbox.style.display = "none";
+    }, 300);
+    stopSlideshow();
+  }
+
+  function nextImage() {
+    currentIndex = (currentIndex + 1) % images.length;
+    updateLightbox();
+  }
+
+  function prevImage() {
+    currentIndex = (currentIndex - 1 + images.length) % images.length;
+    updateLightbox();
+  }
+
+  function startSlideshow() {
+    stopSlideshow();
+    slideshowInterval = setInterval(nextImage, 3000);
+  }
+
+  function stopSlideshow() {
+    clearInterval(slideshowInterval);
+  }
+
+  images.forEach((img, index) => {
+    img.parentElement.addEventListener("click", () => showLightbox(index));
+  });
+
+  window.addEventListener("keydown", (e) => {
+    if (lightbox.style.display === "flex") {
+      if (e.key === "Escape") closeLightbox();
+      if (e.key === "ArrowRight") nextImage();
+      if (e.key === "ArrowLeft") prevImage();
+    }
+  });
+
+  lightbox.addEventListener("mouseenter", stopSlideshow);
+  lightbox.addEventListener("mouseleave", startSlideshow);
+
+  // Optimize for mobile devices
+  if ('ontouchstart' in window) {
+    // Disable hover effects on touch devices
+    document.body.classList.add('touch-device');
+    
+    // Increase touch target sizes
+    document.querySelectorAll('button').forEach(btn => {
+      btn.style.minHeight = '44px';
+      btn.style.minWidth = '44px';
+    });
+  }
+
+  // Handle orientation changes
+  window.addEventListener('orientationchange', () => {
+    // Update layout after orientation change
+    setTimeout(() => {
+      if (lightbox.style.display === 'flex') {
+        updateLightbox();
+      }
+    }, 300);
+  });
+
+  // Prevent pull-to-refresh on mobile
+  document.body.addEventListener('touchmove', (e) => {
+    if (e.target.closest('.lightbox')) {
+      e.preventDefault();
+    }
+  }, { passive: false });
+
+  // Add loading="lazy" to gallery images
+  document.querySelectorAll('.gallery-item img').forEach(img => {
+    img.loading = 'lazy';
+  });
+</script>
+
+</body>
+</html>
